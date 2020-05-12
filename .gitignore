@@ -5,3 +5,5 @@
 Lib
 Scripts
 
+# python configurations
+pyvenv.cfg
