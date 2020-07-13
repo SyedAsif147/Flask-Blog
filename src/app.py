@@ -46,19 +46,29 @@ def blogs(id):
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
+    cur = mysql.connection.cursor()
     if request.method == 'POST':
         userDetails = request.form
-        if userDetails['password'] != userDetails['confirm_password']:
-            flash('Passwords do not match! Try again.', 'danger')
+        username = userDetails['username']
+        userValue = cur.execute("SELECT * FROM user WHERE username = %s", ([username]))
+        emailvalue = cur.execute("SELECT * FROM user WHERE email = %s", ([userDetails['email']]))
+        if emailvalue > 0:
+            flash('Email already exists', 'danger')
             return render_template('register.html')
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO user(first_name, last_name, username, email, password) "\
-        "VALUES(%s,%s,%s,%s,%s)",(userDetails['first_name'], userDetails['last_name'], \
-        userDetails['username'], userDetails['email'], generate_password_hash(userDetails['password'])))
-        mysql.connection.commit()
-        cur.close()
-        flash('Registration successful! Please login.', 'success')
-        return redirect('/login')
+        if userValue > 0:
+            flash('Username alraedy exists', 'danger')
+        else:
+            if userDetails['password'] != userDetails['confirm_password']:
+                flash('Passwords do not match! Try again.', 'danger')
+                return render_template('register.html')
+            
+            cur.execute("INSERT INTO user(first_name, last_name, username, email, password) "\
+            "VALUES(%s,%s,%s,%s,%s)",(userDetails['first_name'], userDetails['last_name'], \
+            userDetails['username'], userDetails['email'], generate_password_hash(userDetails['password'])))
+            mysql.connection.commit()
+            cur.close()
+            flash('Registration successful! Please login.', 'success')
+            return redirect('/login')
     return render_template('register.html')
 
 @app.route('/login/', methods=['GET', 'POST'])
